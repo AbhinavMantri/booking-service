@@ -1,19 +1,39 @@
 package com.example.booking_service.controllers;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import com.example.booking_service.dtos.BookingDetailResponse;
+import com.example.booking_service.dtos.BookingResponse;
+import com.example.booking_service.dtos.TicketResponse;
+import com.example.booking_service.services.BookingService;
+import com.example.booking_service.services.TicketService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.booking_service.dtos.BookingRequest;
-import com.example.booking_service.dtos.BookingResponse;
+import java.util.List;
+import java.util.UUID;
 
 @RestController
-@RequestMapping("/bookings/finalize")
+@RequiredArgsConstructor
+@RequestMapping("/bookings")
 public class BookingController {
-    @PostMapping("")
-    public ResponseEntity<BookingResponse> finalizeBooking(@RequestBody BookingRequest bookingRequest) {
-        return ResponseEntity.ok(new BookingResponse());
+    private final BookingService bookingService;
+    private final TicketService ticketService;
+
+    @GetMapping
+    public BookingResponse getBookings(@RequestParam UUID userId) {
+        return bookingService.getBookings(userId);
+    }
+
+    @GetMapping("/{bookingId}")
+    public BookingDetailResponse getBooking(@PathVariable UUID bookingId) {
+        return bookingService.getBooking(bookingId);
+    }
+
+    @GetMapping("/{bookingId}/tickets")
+    public List<TicketResponse> getTicketsForBooking(@PathVariable UUID bookingId) {
+        return ticketService.getTicketsForBooking(bookingId);
     }
 }
