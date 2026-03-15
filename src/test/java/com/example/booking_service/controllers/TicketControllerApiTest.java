@@ -7,7 +7,6 @@ import com.example.booking_service.model.Ticket;
 import com.example.booking_service.model.TicketStatus;
 import com.example.booking_service.services.JWTService;
 import com.example.booking_service.services.TicketService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,7 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -32,6 +31,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(MockitoExtension.class)
 class TicketControllerApiTest {
+    private static final String API_PREFIX = "/booking-service/v1";
+
     @Mock
     private TicketService ticketService;
 
@@ -43,9 +44,10 @@ class TicketControllerApiTest {
     @BeforeEach
     void setUp() {
         TicketController controller = new TicketController(ticketService);
+        PublicApiAuthenticationFilter authFilter = new PublicApiAuthenticationFilter(jwtService);
+        ReflectionTestUtils.setField(authFilter, "apiPrefix", API_PREFIX);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
-                .addFilters(new RequestCorrelationFilter(), new PublicApiAuthenticationFilter(jwtService, new ObjectMapper()))
-                .setMessageConverters(new JacksonJsonHttpMessageConverter())
+                .addFilters(new RequestCorrelationFilter(), authFilter)
                 .build();
     }
 
@@ -61,7 +63,8 @@ class TicketControllerApiTest {
         when(jwtService.validateAndExtractClaims("api-token")).thenReturn(Map.of("userId", UUID.randomUUID().toString()));
         when(ticketService.getTicket(ticketId)).thenReturn(ticket);
 
-        mockMvc.perform(get("/api/v1/tickets/{ticketId}", ticketId)
+        mockMvc.perform(get(API_PREFIX + "/tickets/{ticketId}", ticketId)
+                        .contextPath(API_PREFIX)
                         .header(HttpHeaders.AUTHORIZATION, "Bearer api-token")
                         .header(RequestCorrelationFilter.REQUEST_ID_HEADER, "ticket-api-1"))
                 .andExpect(status().isOk())
@@ -73,7 +76,7 @@ class TicketControllerApiTest {
 
     @Test
     void getTicketReturnsUnauthorizedWithoutBearerToken() throws Exception {
-        mockMvc.perform(get("/api/v1/tickets/{ticketId}", UUID.randomUUID()))
+        mockMvc.perform(get(API_PREFIX + "/tickets/{ticketId}", UUID.randomUUID()).contextPath(API_PREFIX))
                 .andExpect(status().isUnauthorized())
                 .andExpect(header().exists(RequestCorrelationFilter.REQUEST_ID_HEADER))
                 .andExpect(jsonPath("$.status").value("FAILURE"));
@@ -85,7 +88,8 @@ class TicketControllerApiTest {
         when(jwtService.validateAndExtractClaims("api-token")).thenReturn(Map.of("userId", UUID.randomUUID().toString()));
         when(ticketService.getTicket(ticketId)).thenThrow(new TicketNotFoundException(ticketId));
 
-        mockMvc.perform(get("/api/v1/tickets/{ticketId}", ticketId)
+        mockMvc.perform(get(API_PREFIX + "/tickets/{ticketId}", ticketId)
+                        .contextPath(API_PREFIX)
                         .header(HttpHeaders.AUTHORIZATION, "Bearer api-token"))
                 .andExpect(status().isNotFound())
                 .andExpect(header().exists(RequestCorrelationFilter.REQUEST_ID_HEADER))
@@ -103,7 +107,8 @@ class TicketControllerApiTest {
         when(jwtService.validateAndExtractClaims("api-token")).thenReturn(Map.of("userId", UUID.randomUUID().toString()));
         when(ticketService.scanTicket(any())).thenReturn(ticket);
 
-        mockMvc.perform(post("/api/v1/tickets/scan")
+        mockMvc.perform(post(API_PREFIX + "/tickets/scan")
+                        .contextPath(API_PREFIX)
                         .header(HttpHeaders.AUTHORIZATION, "Bearer api-token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -123,7 +128,8 @@ class TicketControllerApiTest {
         when(jwtService.validateAndExtractClaims("api-token")).thenReturn(Map.of("userId", UUID.randomUUID().toString()));
         when(ticketService.scanTicket(any())).thenThrow(new TicketNotFoundException("MISSING"));
 
-        mockMvc.perform(post("/api/v1/tickets/scan")
+        mockMvc.perform(post(API_PREFIX + "/tickets/scan")
+                        .contextPath(API_PREFIX)
                         .header(HttpHeaders.AUTHORIZATION, "Bearer api-token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""

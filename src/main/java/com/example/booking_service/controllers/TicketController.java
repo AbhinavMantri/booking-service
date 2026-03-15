@@ -26,7 +26,7 @@ import java.util.UUID;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/tickets")
+@RequestMapping("/tickets")
 public class TicketController {
     private final TicketService ticketService;
 

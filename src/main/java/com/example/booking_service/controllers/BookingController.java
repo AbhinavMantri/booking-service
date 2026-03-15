@@ -30,7 +30,7 @@ import java.util.UUID;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/bookings")
+@RequestMapping("/bookings")
 public class BookingController {
     private final BookingService bookingService;
 

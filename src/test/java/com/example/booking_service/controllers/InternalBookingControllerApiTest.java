@@ -12,7 +12,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -30,6 +29,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(MockitoExtension.class)
 class InternalBookingControllerApiTest {
+    private static final String API_PREFIX = "/booking-service/v1";
+
     @Mock
     private InternalBookingService internalBookingService;
 
@@ -43,7 +44,6 @@ class InternalBookingControllerApiTest {
         InternalBookingController controller = new InternalBookingController(internalBookingService, ticketRepository);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .addFilters(new RequestCorrelationFilter())
-                .setMessageConverters(new JacksonJsonHttpMessageConverter())
                 .build();
     }
 
@@ -61,7 +61,8 @@ class InternalBookingControllerApiTest {
         when(internalBookingService.finalizeBooking(any())).thenReturn(booking);
         when(ticketRepository.findAllByBookingIdOrderByIssuedAtAsc(bookingId)).thenReturn(List.of(ticket));
 
-        mockMvc.perform(post("/internal/v1/bookings/finalize")
+        mockMvc.perform(post(API_PREFIX + "/internal/bookings/finalize")
+                        .contextPath(API_PREFIX)
                         .contentType(MediaType.APPLICATION_JSON)
                         .header(RequestCorrelationFilter.REQUEST_ID_HEADER, "api-request-123")
                         .content(requestJson()))
@@ -77,7 +78,8 @@ class InternalBookingControllerApiTest {
         when(internalBookingService.finalizeBooking(any()))
                 .thenThrow(new BookingConflictException("Payment already exists for a non-confirmed booking"));
 
-        mockMvc.perform(post("/internal/v1/bookings/finalize")
+        mockMvc.perform(post(API_PREFIX + "/internal/bookings/finalize")
+                        .contextPath(API_PREFIX)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson()))
                 .andExpect(status().isConflict())
@@ -89,12 +91,12 @@ class InternalBookingControllerApiTest {
     private String requestJson() {
         return """
                 {
-                  \"paymentId\": \"11111111-1111-1111-1111-111111111111\",
-                  \"userId\": \"22222222-2222-2222-2222-222222222222\",
-                  \"eventId\": \"33333333-3333-3333-3333-333333333333\",
-                  \"lockId\": \"44444444-4444-4444-4444-444444444444\",
-                  \"currency\": \"USD\",
-                  \"totalAmountMinor\": 1000
+                  "paymentId": "11111111-1111-1111-1111-111111111111",
+                  "userId": "22222222-2222-2222-2222-222222222222",
+                  "eventId": "33333333-3333-3333-3333-333333333333",
+                  "lockId": "44444444-4444-4444-4444-444444444444",
+                  "currency": "USD",
+                  "totalAmountMinor": 1000
                 }
                 """;
     }

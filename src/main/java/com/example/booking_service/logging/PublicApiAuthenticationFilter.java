@@ -1,15 +1,13 @@
 package com.example.booking_service.logging;
 
-import com.example.booking_service.dtos.common.ApiResponse;
-import com.example.booking_service.dtos.common.ResponseStatus;
 import com.example.booking_service.services.JWTService;
-import tools.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
@@ -31,12 +29,16 @@ public class PublicApiAuthenticationFilter extends OncePerRequestFilter {
     private static final String BEARER_PREFIX = "Bearer ";
 
     private final JWTService jwtService;
-    private final ObjectMapper objectMapper;
+
+    @Value("${api.prefix:}")
+    private String apiPrefix;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        return !path.startsWith("/api/v1/bookings") && !path.startsWith("/api/v1/tickets");
+        String bookingsPath = apiPrefix + "/bookings";
+        String ticketsPath = apiPrefix + "/tickets";
+        return !path.startsWith(bookingsPath) && !path.startsWith(ticketsPath);
     }
 
     @Override
@@ -70,12 +72,8 @@ public class PublicApiAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private void writeUnauthorized(HttpServletResponse response, String message) throws IOException {
-        ApiResponse errorResponse = new ApiResponse();
-        errorResponse.setMessage(message);
-        errorResponse.setStatus(ResponseStatus.FAILURE);
-
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        objectMapper.writeValue(response.getWriter(), errorResponse);
+        response.getWriter().write("{\"message\":\"" + message + "\",\"status\":\"FAILURE\"}");
     }
 }

@@ -4,7 +4,7 @@
 
 ### Get Booking History
 
-GET /api/v1/bookings
+GET /booking-service/v1/bookings
 
 Headers
 
@@ -28,7 +28,7 @@ Response
 
 ### Get Booking Detail
 
-GET /api/v1/bookings/{bookingId}
+GET /booking-service/v1/bookings/{bookingId}
 
 Response
 
@@ -50,7 +50,7 @@ Response
 
 ### Get Tickets for Booking
 
-GET /api/v1/bookings/{bookingId}/tickets
+GET /booking-service/v1/bookings/{bookingId}/tickets
 
 Response
 
@@ -67,7 +67,7 @@ Response
 
 ### Get Ticket Detail
 
-GET /api/v1/tickets/{ticketId}
+GET /booking-service/v1/tickets/{ticketId}
 
 Response
 
@@ -82,7 +82,7 @@ Response
 
 ### Scan Ticket
 
-POST /api/v1/tickets/scan
+POST /booking-service/v1/tickets/scan
 
 Request
 
@@ -103,7 +103,7 @@ Response
 
 ### Finalize Booking
 
-POST /internal/v1/bookings/finalize
+POST /booking-service/v1/internal/bookings/finalize
 
 Headers
 

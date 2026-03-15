@@ -10,7 +10,6 @@ import com.example.booking_service.model.Ticket;
 import com.example.booking_service.model.TicketStatus;
 import com.example.booking_service.services.BookingService;
 import com.example.booking_service.services.JWTService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,7 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -35,6 +34,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(MockitoExtension.class)
 class BookingControllerApiTest {
+    private static final String API_PREFIX = "/booking-service/v1";
+
     @Mock
     private BookingService bookingService;
 
@@ -46,9 +47,10 @@ class BookingControllerApiTest {
     @BeforeEach
     void setUp() {
         BookingController controller = new BookingController(bookingService);
+        PublicApiAuthenticationFilter authFilter = new PublicApiAuthenticationFilter(jwtService);
+        ReflectionTestUtils.setField(authFilter, "apiPrefix", API_PREFIX);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
-                .addFilters(new RequestCorrelationFilter(), new PublicApiAuthenticationFilter(jwtService, new ObjectMapper()))
-                .setMessageConverters(new JacksonJsonHttpMessageConverter())
+                .addFilters(new RequestCorrelationFilter(), authFilter)
                 .build();
     }
 
@@ -60,7 +62,8 @@ class BookingControllerApiTest {
         when(jwtService.validateAndExtractClaims("api-token")).thenReturn(Map.of("userId", userId.toString()));
         when(bookingService.getBookings(userId)).thenReturn(List.of(summary));
 
-        mockMvc.perform(get("/api/v1/bookings")
+        mockMvc.perform(get(API_PREFIX + "/bookings")
+                        .contextPath(API_PREFIX)
                         .header(HttpHeaders.AUTHORIZATION, "Bearer api-token")
                         .header(RequestCorrelationFilter.REQUEST_ID_HEADER, "booking-api-123")
                         .accept(MediaType.APPLICATION_JSON))
@@ -74,7 +77,7 @@ class BookingControllerApiTest {
 
     @Test
     void getBookingsReturnsUnauthorizedWithoutBearerToken() throws Exception {
-        mockMvc.perform(get("/api/v1/bookings"))
+        mockMvc.perform(get(API_PREFIX + "/bookings").contextPath(API_PREFIX))
                 .andExpect(status().isUnauthorized())
                 .andExpect(header().exists(RequestCorrelationFilter.REQUEST_ID_HEADER))
                 .andExpect(jsonPath("$.status").value("FAILURE"));
@@ -100,7 +103,8 @@ class BookingControllerApiTest {
         when(bookingService.getBooking(bookingId)).thenReturn(booking);
         when(bookingService.getBookingItems(bookingId)).thenReturn(List.of(item));
 
-        mockMvc.perform(get("/api/v1/bookings/{bookingId}", bookingId)
+        mockMvc.perform(get(API_PREFIX + "/bookings/{bookingId}", bookingId)
+                        .contextPath(API_PREFIX)
                         .header(HttpHeaders.AUTHORIZATION, "Bearer api-token")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -117,7 +121,8 @@ class BookingControllerApiTest {
         when(jwtService.validateAndExtractClaims("api-token")).thenReturn(Map.of("userId", UUID.randomUUID().toString()));
         when(bookingService.getBooking(bookingId)).thenThrow(new BookingNotFoundException(bookingId));
 
-        mockMvc.perform(get("/api/v1/bookings/{bookingId}", bookingId)
+        mockMvc.perform(get(API_PREFIX + "/bookings/{bookingId}", bookingId)
+                        .contextPath(API_PREFIX)
                         .header(HttpHeaders.AUTHORIZATION, "Bearer api-token"))
                 .andExpect(status().isNotFound())
                 .andExpect(header().exists(RequestCorrelationFilter.REQUEST_ID_HEADER));
@@ -135,7 +140,8 @@ class BookingControllerApiTest {
         when(jwtService.validateAndExtractClaims("api-token")).thenReturn(Map.of("userId", UUID.randomUUID().toString()));
         when(bookingService.getTicketsForBooking(bookingId)).thenReturn(List.of(ticket));
 
-        mockMvc.perform(get("/api/v1/bookings/{bookingId}/tickets", bookingId)
+        mockMvc.perform(get(API_PREFIX + "/bookings/{bookingId}/tickets", bookingId)
+                        .contextPath(API_PREFIX)
                         .header(HttpHeaders.AUTHORIZATION, "Bearer api-token"))
                 .andExpect(status().isOk())
                 .andExpect(header().exists(RequestCorrelationFilter.REQUEST_ID_HEADER))
@@ -150,7 +156,8 @@ class BookingControllerApiTest {
         when(jwtService.validateAndExtractClaims("api-token")).thenReturn(Map.of("userId", UUID.randomUUID().toString()));
         when(bookingService.getTicketsForBooking(bookingId)).thenThrow(new BookingNotFoundException(bookingId));
 
-        mockMvc.perform(get("/api/v1/bookings/{bookingId}/tickets", bookingId)
+        mockMvc.perform(get(API_PREFIX + "/bookings/{bookingId}/tickets", bookingId)
+                        .contextPath(API_PREFIX)
                         .header(HttpHeaders.AUTHORIZATION, "Bearer api-token"))
                 .andExpect(status().isNotFound())
                 .andExpect(header().exists(RequestCorrelationFilter.REQUEST_ID_HEADER))

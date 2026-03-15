@@ -26,7 +26,7 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/internal/v1/bookings")
+@RequestMapping("/internal/bookings")
 public class InternalBookingController {
     private final InternalBookingService internalBookingService;
     private final TicketRepository ticketRepository;
