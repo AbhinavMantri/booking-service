@@ -10,5 +10,5 @@ public class BookingDetailResponse {
     private UUID bookingId;
     private UUID eventId;
     private String status;
-    private List<BookingDetailItemResponse> items;
+    private List<BookingDetailItem> items;
 }

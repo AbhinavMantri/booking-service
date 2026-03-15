@@ -7,7 +7,7 @@ import java.util.UUID;
 
 @Data
 @Builder
-public class BookingDetailItemResponse {
+public class BookingDetailItem {
     private UUID bookingItemId;
     private UUID eventSeatId;
     private UUID sectionId;

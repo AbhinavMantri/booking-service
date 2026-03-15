@@ -61,7 +61,7 @@ class InternalBookingControllerApiTest {
         when(internalBookingService.finalizeBooking(any())).thenReturn(booking);
         when(ticketRepository.findAllByBookingIdOrderByIssuedAtAsc(bookingId)).thenReturn(List.of(ticket));
 
-        mockMvc.perform(post("/internal/bookings/finalize")
+        mockMvc.perform(post("/internal/v1/bookings/finalize")
                         .contentType(MediaType.APPLICATION_JSON)
                         .header(RequestCorrelationFilter.REQUEST_ID_HEADER, "api-request-123")
                         .content(requestJson()))
@@ -77,7 +77,7 @@ class InternalBookingControllerApiTest {
         when(internalBookingService.finalizeBooking(any()))
                 .thenThrow(new BookingConflictException("Payment already exists for a non-confirmed booking"));
 
-        mockMvc.perform(post("/internal/bookings/finalize")
+        mockMvc.perform(post("/internal/v1/bookings/finalize")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson()))
                 .andExpect(status().isConflict())

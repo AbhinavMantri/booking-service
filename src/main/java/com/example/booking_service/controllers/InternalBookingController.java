@@ -3,6 +3,7 @@ package com.example.booking_service.controllers;
 import com.example.booking_service.dtos.BookingRequest;
 import com.example.booking_service.dtos.FinalizeBookingResponse;
 import com.example.booking_service.dtos.FinalizeBookingTicketResponse;
+import com.example.booking_service.dtos.TicketSummary;
 import com.example.booking_service.dtos.common.ResponseStatus;
 import com.example.booking_service.exceptions.BookingConflictException;
 import com.example.booking_service.logging.RequestCorrelationFilter;
@@ -25,7 +26,7 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/internal/bookings")
+@RequestMapping("/internal/v1/bookings")
 public class InternalBookingController {
     private final InternalBookingService internalBookingService;
     private final TicketRepository ticketRepository;
@@ -57,9 +58,12 @@ public class InternalBookingController {
     }
 
     private FinalizeBookingTicketResponse toFinalizeBookingTicketResponse(Ticket ticket) {
-        return FinalizeBookingTicketResponse.builder()
+        
+        FinalizeBookingTicketResponse response = new FinalizeBookingTicketResponse();
+        response.setTicketSummary(TicketSummary.builder()
                 .ticketId(ticket.getBookingId())
                 .ticketNumber(ticket.getTicketNumber())
-                .build();
+                .build());
+        return response;
     }
 }
