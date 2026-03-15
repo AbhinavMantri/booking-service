@@ -40,7 +40,11 @@ public class TicketService {
         ticket.setStatus(TicketStatus.USED);
         ticket.setCheckedInAt(OffsetDateTime.now());
         Ticket savedTicket = ticketRepository.save(ticket);
-        return new ScanTicketResponse(savedTicket.getId(), savedTicket.getStatus());
+
+        ScanTicketResponse response = new ScanTicketResponse();
+        response.setTicketId(savedTicket.getId());
+        response.setStatus(savedTicket.getStatus());
+        return response;
     }
 
     private Ticket getExistingTicket(UUID ticketId) {
@@ -49,6 +53,11 @@ public class TicketService {
     }
 
     private TicketResponse toResponse(Ticket ticket) {
-        return new TicketResponse(ticket.getId(), ticket.getTicketNumber(), ticket.getTicketCode(), ticket.getStatus());
+        TicketResponse response = new TicketResponse();
+        response.setTicketId(ticket.getId());
+        response.setTicketNumber(ticket.getTicketNumber());
+        response.setTicketCode(ticket.getTicketCode());
+        response.setStatus(ticket.getStatus());
+        return response;
     }
 }

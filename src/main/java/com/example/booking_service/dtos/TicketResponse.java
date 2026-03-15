@@ -1,16 +1,12 @@
 package com.example.booking_service.dtos;
 
-import com.example.booking_service.dtos.common.ApiResponse;
-import com.example.booking_service.dtos.common.ResponseStatus;
 import com.example.booking_service.model.TicketStatus;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import java.util.UUID;
 
 @Data
-@EqualsAndHashCode(callSuper = false)
-public class TicketResponse extends ApiResponse {
+public class TicketResponse {
     private UUID ticketId;
     private String ticketNumber;
     private String ticketCode;
