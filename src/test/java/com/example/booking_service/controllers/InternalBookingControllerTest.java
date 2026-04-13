@@ -7,6 +7,7 @@ import com.example.booking_service.exceptions.BookingConflictException;
 import com.example.booking_service.model.Booking;
 import com.example.booking_service.model.Ticket;
 import com.example.booking_service.repositories.TicketRepository;
+import com.example.booking_service.services.CheckoutService;
 import com.example.booking_service.services.InternalBookingService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,6 +31,9 @@ class InternalBookingControllerTest {
 
     @Mock
     private TicketRepository ticketRepository;
+
+    @Mock
+    private CheckoutService checkoutService;
 
     @InjectMocks
     private InternalBookingController internalBookingController;

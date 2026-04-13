@@ -57,6 +57,7 @@ public class InternalBookingService {
         OffsetDateTime now = OffsetDateTime.now();
 
         Booking booking = new Booking();
+        booking.setId(request.getLockId());
         booking.setUserId(request.getUserId());
         booking.setEventId(request.getEventId());
         booking.setPaymentId(request.getPaymentId());

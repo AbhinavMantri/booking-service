@@ -12,6 +12,7 @@ import com.example.booking_service.model.BookingItem;
 import com.example.booking_service.model.Ticket;
 import com.example.booking_service.model.TicketStatus;
 import com.example.booking_service.services.BookingService;
+import com.example.booking_service.services.CheckoutService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,6 +32,9 @@ import static org.mockito.Mockito.when;
 class BookingControllerTest {
     @Mock
     private BookingService bookingService;
+
+    @Mock
+    private CheckoutService checkoutService;
 
     @Mock
     private HttpServletRequest request;

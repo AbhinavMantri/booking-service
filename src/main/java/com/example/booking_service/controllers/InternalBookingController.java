@@ -3,6 +3,8 @@ package com.example.booking_service.controllers;
 import com.example.booking_service.dtos.BookingRequest;
 import com.example.booking_service.dtos.FinalizeBookingResponse;
 import com.example.booking_service.dtos.FinalizeBookingTicketResponse;
+import com.example.booking_service.dtos.ProcessPaymentOutcomeRequest;
+import com.example.booking_service.dtos.ProcessPaymentOutcomeResponse;
 import com.example.booking_service.dtos.TicketSummary;
 import com.example.booking_service.dtos.common.ResponseStatus;
 import com.example.booking_service.exceptions.BookingConflictException;
@@ -10,6 +12,7 @@ import com.example.booking_service.logging.RequestCorrelationFilter;
 import com.example.booking_service.model.Booking;
 import com.example.booking_service.model.Ticket;
 import com.example.booking_service.repositories.TicketRepository;
+import com.example.booking_service.services.CheckoutService;
 import com.example.booking_service.services.InternalBookingService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +32,7 @@ import java.util.List;
 @RequestMapping("/internal/bookings")
 public class InternalBookingController {
     private final InternalBookingService internalBookingService;
+    private final CheckoutService checkoutService;
     private final TicketRepository ticketRepository;
 
     @PostMapping("/finalize")
@@ -55,6 +59,19 @@ public class InternalBookingController {
             log.warn("requestId={} finalize booking request conflicted reason={}", requestId, ex.getMessage());
             return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
         }
+    }
+
+    @PostMapping("/payment-outcomes")
+    public ResponseEntity<ProcessPaymentOutcomeResponse> processPaymentOutcome(
+            @Valid @RequestBody ProcessPaymentOutcomeRequest request
+    ) {
+        String requestId = RequestCorrelationFilter.getCurrentRequestId();
+        log.info("requestId={} process payment outcome request received paymentId={} paymentStatus={} lockId={}",
+                requestId, request.getPaymentId(), request.getPaymentStatus(), request.getLockId());
+        ProcessPaymentOutcomeResponse response = checkoutService.processPaymentOutcome(request);
+        log.info("requestId={} process payment outcome request completed action={} bookingId={}",
+                requestId, response.getAction(), response.getBookingId());
+        return ResponseEntity.ok(response);
     }
 
     private FinalizeBookingTicketResponse toFinalizeBookingTicketResponse(Ticket ticket) {

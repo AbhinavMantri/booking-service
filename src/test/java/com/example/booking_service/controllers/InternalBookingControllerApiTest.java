@@ -5,6 +5,7 @@ import com.example.booking_service.logging.RequestCorrelationFilter;
 import com.example.booking_service.model.Booking;
 import com.example.booking_service.model.Ticket;
 import com.example.booking_service.repositories.TicketRepository;
+import com.example.booking_service.services.CheckoutService;
 import com.example.booking_service.services.InternalBookingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,11 +38,14 @@ class InternalBookingControllerApiTest {
     @Mock
     private TicketRepository ticketRepository;
 
+    @Mock
+    private CheckoutService checkoutService;
+
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
-        InternalBookingController controller = new InternalBookingController(internalBookingService, ticketRepository);
+        InternalBookingController controller = new InternalBookingController(internalBookingService, checkoutService, ticketRepository);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .addFilters(new RequestCorrelationFilter())
                 .build();

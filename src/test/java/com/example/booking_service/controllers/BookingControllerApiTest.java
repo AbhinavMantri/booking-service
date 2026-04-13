@@ -9,6 +9,7 @@ import com.example.booking_service.model.BookingItem;
 import com.example.booking_service.model.Ticket;
 import com.example.booking_service.model.TicketStatus;
 import com.example.booking_service.services.BookingService;
+import com.example.booking_service.services.CheckoutService;
 import com.example.booking_service.services.JWTService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,13 +41,16 @@ class BookingControllerApiTest {
     private BookingService bookingService;
 
     @Mock
+    private CheckoutService checkoutService;
+
+    @Mock
     private JWTService jwtService;
 
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
-        BookingController controller = new BookingController(bookingService);
+        BookingController controller = new BookingController(bookingService, checkoutService);
         PublicApiAuthenticationFilter authFilter = new PublicApiAuthenticationFilter(jwtService);
         ReflectionTestUtils.setField(authFilter, "apiPrefix", API_PREFIX);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)

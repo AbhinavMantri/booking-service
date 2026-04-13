@@ -3,6 +3,8 @@ package com.example.booking_service.model;
 import com.example.booking_service.model.common.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import lombok.Data;
 
@@ -31,6 +33,7 @@ public class Ticket extends BaseEntity {
     @Column(name = "ticket_code", nullable = false, unique = true, length = 128)
     private String ticketCode;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 30)
     private TicketStatus status;
 

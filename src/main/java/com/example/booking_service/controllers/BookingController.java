@@ -5,6 +5,8 @@ import com.example.booking_service.dtos.BookingDetailResponse;
 import com.example.booking_service.dtos.BookingResponse;
 import com.example.booking_service.dtos.BookingSummary;
 import com.example.booking_service.dtos.BookingTicketResponse;
+import com.example.booking_service.dtos.CheckoutRequest;
+import com.example.booking_service.dtos.CheckoutResponse;
 import com.example.booking_service.dtos.TicketDetails;
 import com.example.booking_service.dtos.common.ResponseStatus;
 import com.example.booking_service.exceptions.BookingNotFoundException;
@@ -14,13 +16,18 @@ import com.example.booking_service.model.Booking;
 import com.example.booking_service.model.BookingItem;
 import com.example.booking_service.model.Ticket;
 import com.example.booking_service.services.BookingService;
+import com.example.booking_service.services.CheckoutService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -33,6 +40,7 @@ import java.util.UUID;
 @RequestMapping("/bookings")
 public class BookingController {
     private final BookingService bookingService;
+    private final CheckoutService checkoutService;
 
     @GetMapping
     public ResponseEntity<BookingResponse> getBookings(HttpServletRequest request) {
@@ -100,6 +108,22 @@ public class BookingController {
                     requestId, bookingId, System.currentTimeMillis() - startTime, e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
+    }
+
+    @PostMapping("/checkout")
+    public ResponseEntity<CheckoutResponse> initiateCheckout(
+            HttpServletRequest request,
+            @RequestHeader("Idempotency-Key") String idempotencyKey,
+            @Valid @RequestBody CheckoutRequest checkoutRequest
+    ) {
+        String requestId = RequestCorrelationFilter.getCurrentRequestId();
+        UUID userId = UUID.fromString(String.valueOf(request.getAttribute(PublicApiAuthenticationFilter.AUTHENTICATED_USER_ID)));
+        log.info("requestId={} initiate checkout request received userId={} eventId={} seatCount={} provider={}",
+                requestId, userId, checkoutRequest.getEventId(), checkoutRequest.getSeatIds().size(), checkoutRequest.getProvider());
+        CheckoutResponse response = checkoutService.initiateCheckout(userId, idempotencyKey, checkoutRequest);
+        log.info("requestId={} initiate checkout request completed bookingId={} paymentId={}",
+                requestId, response.getBookingId(), response.getPaymentId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     private TicketDetails toTicketDetails(Ticket ticket) {
