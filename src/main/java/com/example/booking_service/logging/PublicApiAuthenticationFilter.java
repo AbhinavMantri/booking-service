@@ -57,9 +57,9 @@ public class PublicApiAuthenticationFilter extends OncePerRequestFilter {
         try {
             String token = authorizationHeader.substring(BEARER_PREFIX.length());
             Map<String, Object> claims = jwtService.validateAndExtractClaims(token);
-            Object userId = claims.get("userId");
+            Object userId = firstPresentClaim(claims, "userId", "sub");
             if (!StringUtils.hasText(userId == null ? null : userId.toString())) {
-                throw new IllegalArgumentException("Missing userId claim");
+                throw new IllegalArgumentException("Missing userId/sub claim");
             }
 
             request.setAttribute(AUTHENTICATED_USER_ID, userId.toString());
@@ -69,6 +69,16 @@ public class PublicApiAuthenticationFilter extends OncePerRequestFilter {
                     requestId, request.getRequestURI(), ex.getMessage());
             writeUnauthorized(response, "Unauthorized");
         }
+    }
+
+    private Object firstPresentClaim(Map<String, Object> claims, String... claimNames) {
+        for (String claimName : claimNames) {
+            Object value = claims.get(claimName);
+            if (value != null && StringUtils.hasText(value.toString())) {
+                return value;
+            }
+        }
+        return null;
     }
 
     private void writeUnauthorized(HttpServletResponse response, String message) throws IOException {

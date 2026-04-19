@@ -4,9 +4,11 @@ import com.example.booking_service.dtos.BookingRequest;
 import com.example.booking_service.dtos.BookingSeatRequest;
 import com.example.booking_service.exceptions.BookingConflictException;
 import com.example.booking_service.model.Booking;
+import com.example.booking_service.model.BookingFulfillmentRequest;
 import com.example.booking_service.model.BookingItem;
 import com.example.booking_service.model.BookingStatus;
 import com.example.booking_service.model.Ticket;
+import com.example.booking_service.repositories.BookingFulfillmentRequestRepository;
 import com.example.booking_service.repositories.BookingItemRepository;
 import com.example.booking_service.repositories.BookingRepository;
 import com.example.booking_service.repositories.TicketRepository;
@@ -41,6 +43,9 @@ class InternalBookingServiceTest {
     @Mock
     private TicketRepository ticketRepository;
 
+    @Mock
+    private BookingFulfillmentRequestRepository fulfillmentRequestRepository;
+
     @InjectMocks
     private InternalBookingService internalBookingService;
 
@@ -63,6 +68,7 @@ class InternalBookingServiceTest {
 
         when(bookingRepository.findByPaymentId(request.getPaymentId())).thenReturn(Optional.empty());
         when(bookingRepository.findByLockId(request.getLockId())).thenReturn(Optional.empty());
+        when(fulfillmentRequestRepository.findByPaymentId(request.getPaymentId())).thenReturn(Optional.empty());
         when(bookingRepository.save(any(Booking.class))).thenReturn(savedBooking);
         when(bookingItemRepository.save(any(BookingItem.class))).thenReturn(savedItem);
 
@@ -88,6 +94,13 @@ class InternalBookingServiceTest {
         assertThat(ticket.getIssuedAt()).isNotNull();
         assertThat(ticket.getTicketNumber()).startsWith("TKT-");
         assertThat(ticket.getTicketCode()).isNotBlank();
+
+        ArgumentCaptor<BookingFulfillmentRequest> fulfillmentCaptor = ArgumentCaptor.forClass(BookingFulfillmentRequest.class);
+        verify(fulfillmentRequestRepository).save(fulfillmentCaptor.capture());
+        BookingFulfillmentRequest fulfillmentRequest = fulfillmentCaptor.getValue();
+        assertThat(fulfillmentRequest.getPaymentId()).isEqualTo(request.getPaymentId());
+        assertThat(fulfillmentRequest.getBookingId()).isEqualTo(bookingId);
+        assertThat(fulfillmentRequest.getRequestHash()).hasSize(64);
     }
 
     @Test
@@ -98,6 +111,7 @@ class InternalBookingServiceTest {
         existingBooking.setStatus(BookingStatus.CONFIRMED.name());
 
         when(bookingRepository.findByPaymentId(request.getPaymentId())).thenReturn(Optional.of(existingBooking));
+        when(fulfillmentRequestRepository.findByPaymentId(request.getPaymentId())).thenReturn(Optional.empty());
 
         Booking result = internalBookingService.finalizeBooking(request);
 
@@ -105,6 +119,7 @@ class InternalBookingServiceTest {
         verify(bookingRepository, never()).save(any(Booking.class));
         verify(bookingItemRepository, never()).save(any(BookingItem.class));
         verify(ticketRepository, never()).save(any(Ticket.class));
+        verify(fulfillmentRequestRepository).save(any(BookingFulfillmentRequest.class));
     }
 
     @Test
